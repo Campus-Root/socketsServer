@@ -1,11 +1,13 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-
+import { initialize } from "./dbConnection.js";
+import 'dotenv/config'
+import { getTokens, sendPushNotification } from "./sendNotification.js";
+initialize();
 const app = express();
 app.get('/', (req, res) => res.send("socket server running"));
 const server = createServer(app);
-// import { getTokens, sendPushNotification } from "./utils/sendNotification.js";
 const whitelist = ["*"]
 const io = new Server(server, {
   cors: {
@@ -62,15 +64,15 @@ io.on('connection', function (socket) {
     if (offlineUsers.length > 0) {
       console.log("offlineUsers:" + offlineUsers.length);
 
-      // const message = {
-      //   notification: {
-      //     title: 'Test Notification',
-      //     body: 'This is a test notification from your Express server!',
-      //     data: { someData: "ustad hotel" }
-      //   },
-      //   tokens: getTokens(offlineUsers)
-      // };
-      // if (sendPushNotification(message)) console.log("push notifications sent");;
+      const message = {
+        notification: {
+          title: 'Test Notification',
+          body: 'This is a test notification from your Express server!',
+          data: { someData: "ustad hotel" }
+        },
+        tokens: getTokens(offlineUsers)
+      };
+      if (sendPushNotification(message)) console.log("push notifications sent");;
     }
     if (triggerObject.action == "ping") {
       socket.emit('trigger', { sender: null, action: "activityList", data: activityList });
@@ -79,5 +81,5 @@ io.on('connection', function (socket) {
 });
 
 
-const port = 1236
+const port = process.env.PORT
 server.listen(port, () => console.log("Server Running on " + `${port}`));
