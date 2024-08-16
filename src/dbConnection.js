@@ -30,9 +30,6 @@ export const initialize = async () => {
     try {
         await connectRedis(); // Connect to Redis
         console.log('Application initialized successfully');
-
-        // Start your server or application logic here
-        // import and use your server configuration, routes, etc.
     } catch (err) {
         console.error('Error during initialization:', err);
         process.exit(1); // Exit the process if initialization fails
