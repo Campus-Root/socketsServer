@@ -12,6 +12,7 @@ app.use(morgan(':date[web] :method :url :status :res[content-length] - :response
 app.get('/', (req, res) => res.send("socket server running"));
 const server = createServer(app);
 const io = new Server(server, {
+  transports: ['websocket'],
   cors: {
     origin: "*",
     credentials: true,
