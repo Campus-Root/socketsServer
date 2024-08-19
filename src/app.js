@@ -11,16 +11,9 @@ app.use(morgan(':date[web] :method :url :status :res[content-length] - :response
 
 app.get('/', (req, res) => res.send("socket server running"));
 const server = createServer(app);
-const whitelist = ["*"]
 const io = new Server(server, {
   cors: {
-    origin: function (origin, callback) {
-      if (!origin || whitelist.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: "*",
     credentials: true,
   },
 }); // Initialize Socket.IO
