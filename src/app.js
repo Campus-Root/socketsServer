@@ -4,8 +4,11 @@ import { Server } from "socket.io";
 import { initialize } from "./dbConnection.js";
 import 'dotenv/config'
 import { getTokens, sendPushNotification } from "./sendNotification.js";
+import morgan from "morgan";
 initialize();
 const app = express();
+app.use(morgan(':date[web] :method :url :status :res[content-length] - :response-time ms'));
+
 app.get('/', (req, res) => res.send("socket server running"));
 const server = createServer(app);
 const whitelist = ["*"]
