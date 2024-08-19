@@ -61,7 +61,7 @@ io.on('connection', function (socket) {
       });
       if (offlineUsers.length > 0) {
         console.log("offlineUsers:" + offlineUsers.length);
-        let Tokens = getTokens(offlineUsers)
+        let Tokens = await getTokens(offlineUsers)
         console.log(Tokens);
         const message = {
           notification: {
