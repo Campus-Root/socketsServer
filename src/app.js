@@ -37,43 +37,51 @@ io.on('connection', function (socket) {
     socket.join(profile._id);
     console.log(profile.firstName + " joined");
   })
-  socket.on('trigger', (triggerObject) => {
-    console.log(triggerObject.action, triggerObject.sender.firstName);
-    var activityList = [];
-    let offlineUsers = [];
-    console.log(triggerObject);
-    triggerObject.recievers.forEach(reciever => {
-      var online = io.sockets.adapter.rooms.get(reciever._id);
-      console.log("reciever", reciever.firstName, online ? "online" : "offline");
-      if (online) {
-        if (triggerObject.action == "ping") {
-          activityList.push({ ...reciever, activity: 'online' });
+  socket.on('trigger', async (triggerObject) => {
+    try {
+      console.log(triggerObject.action, triggerObject.sender.firstName);
+      var activityList = [];
+      let offlineUsers = [];
+      console.log(triggerObject);
+      triggerObject.recievers.forEach(reciever => {
+        var online = io.sockets.adapter.rooms.get(reciever._id);
+        console.log("reciever", reciever.firstName, online ? "online" : "offline");
+        if (online) {
+          if (triggerObject.action == "ping") {
+            activityList.push({ ...reciever, activity: 'online' });
+          }
+          socket.broadcast.to(reciever._id).emit('trigger', { sender: triggerObject.sender, action: triggerObject.action, data: triggerObject.data });
         }
-        socket.broadcast.to(reciever._id).emit('trigger', { sender: triggerObject.sender, action: triggerObject.action, data: triggerObject.data });
-      }
-      else {
-        if (triggerObject.action == "ping") {
-          activityList.push({ ...reciever, activity: 'offline' });
-          offlineUsers.push(reciever._id);
+        else {
+          if (triggerObject.action == "ping") {
+            activityList.push({ ...reciever, activity: 'offline' });
+            offlineUsers.push(reciever._id);
+          }
         }
+      });
+      if (offlineUsers.length > 0) {
+        console.log("offlineUsers:" + offlineUsers.length);
+        let Tokens = getTokens(offlineUsers)
+        console.log(Tokens);
+        const message = {
+          notification: {
+            title: 'Test Notification',
+            body: 'This is a test notification from your Express server!',
+            data: { someData: "ustad hotel" }
+          },
+          tokens: Tokens
+        };
+        let sentNotifications = await sendPushNotification(message)
+        if (sentNotifications) console.log("push notifications sent");;
       }
-    });
-    if (offlineUsers.length > 0) {
-      console.log("offlineUsers:" + offlineUsers.length);
+      if (triggerObject.action == "ping") {
+        socket.emit('trigger', { sender: null, action: "activityList", data: activityList });
+      }
+    } catch (error) {
+      console.log(error);
 
-      const message = {
-        notification: {
-          title: 'Test Notification',
-          body: 'This is a test notification from your Express server!',
-          data: { someData: "ustad hotel" }
-        },
-        tokens: getTokens(offlineUsers)
-      };
-      if (sendPushNotification(message)) console.log("push notifications sent");;
     }
-    if (triggerObject.action == "ping") {
-      socket.emit('trigger', { sender: null, action: "activityList", data: activityList });
-    }
+
   });
 });
 

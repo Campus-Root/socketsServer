@@ -31,7 +31,6 @@ export const sendPushNotification = async ({ tokens, notification }) => {
             body: notification.body,
             data: notification.data
         }, { headers });
-        console.log('Response:', response.data);
         return true;
     } catch (error) {
         console.error('Error:', error.response ? error.response.data : error.message);
