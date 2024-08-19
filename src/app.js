@@ -42,10 +42,10 @@ io.on('connection', function (socket) {
       console.log(triggerObject.action, triggerObject.sender.firstName);
       var activityList = [];
       let offlineUsers = [];
-      console.log(triggerObject);
+      // console.log(triggerObject);
       triggerObject.recievers.forEach(reciever => {
         var online = io.sockets.adapter.rooms.get(reciever._id);
-        console.log("reciever", reciever.firstName, online ? "online" : "offline");
+        // console.log("reciever", reciever.firstName, online ? "online" : "offline");
         if (online) {
           if (triggerObject.action == "ping") {
             activityList.push({ ...reciever, activity: 'online' });
@@ -71,8 +71,9 @@ io.on('connection', function (socket) {
           },
           tokens: Tokens
         };
-        let sentNotifications = await sendPushNotification(message)
-        if (sentNotifications) console.log("push notifications sent");;
+        if (Tokens.length > 0) {
+          if (await sendPushNotification(message)) console.log("push notifications sent");
+        }
       }
       if (triggerObject.action == "ping") {
         socket.emit('trigger', { sender: null, action: "activityList", data: activityList });
