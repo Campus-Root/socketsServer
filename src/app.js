@@ -12,12 +12,7 @@ app.use(morgan(':date[web] :method :url :status :res[content-length] - :response
 app.get('/', (req, res) => res.send("socket server running"));
 
 
-// Load your existing SSL certificate and private key
-const options = {
-  key: fs.readFileSync('/etc/letsencrypt/live/campusroot.com/privkey.pem'), // Replace with your actual private key file path
-  cert: fs.readFileSync('/etc/letsencrypt/live/campusroot.com/fullchain.pem'), // Replace with your actual certificate file path
-};
-const server = createServer(options, app);
+const server = createServer(app);
 const io = new Server(server, {
   transports: ['websocket'],
   cors: {
