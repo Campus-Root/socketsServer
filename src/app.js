@@ -5,10 +5,24 @@ import { initialize } from "./dbConnection.js";
 import 'dotenv/config'
 import { getTokens, sendPushNotification } from "./sendNotification.js";
 import morgan from "morgan";
+import helmet from "helmet";
 initialize();
 const app = express();
 app.use(morgan(':date[web] :method :url :status :res[content-length] - :response-time ms'));
-
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    imgSrc: ["'self'", "data:", "https://lh3.googleusercontent.com", "https://res.cloudinary.com", "https://icon-library.com/", "https://flagcdn.com/", "blob:"], // Added "blob:"
+    connectSrc: ["'self'", "https://ipapi.co", "blob:"], // Allow blob URLs for workers
+    scriptSrc: ["'self'", "https://accounts.google.com", "https://cdnjs.cloudflare.com"],
+    workerSrc: ["'self'", "blob:"], // Add worker-src directive
+  },
+}));
+// Adding missing security headers
+app.use(helmet.frameguard({ action: 'sameorigin' }));
+app.use(helmet.noSniff());
+app.use(helmet.referrerPolicy({ policy: 'strict-origin-when-cross-origin' }));
+app.use(helmet.permittedCrossDomainPolicies({ permittedPolicies: 'none' }));
 app.get('/', (req, res) => res.send("socket server running"));
 
 
