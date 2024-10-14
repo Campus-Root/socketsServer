@@ -72,6 +72,7 @@ io.on('connection', function (socket) {
       // Check each receiver's online status
       triggerObject.recievers.forEach(reciever => {
         io.in(reciever._id).fetchSockets().then((recieverConnections)=>{
+          console.log("connections of "+reciever.firstName+" ",recieverConnections);
           var isOnline =recieverConnections.length!=0
           if (isOnline) {
             // User is online
