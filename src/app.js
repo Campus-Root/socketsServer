@@ -78,7 +78,7 @@ io.on('connection', function (socket) {
             // User is online
             if (triggerObject.action == "ping") {
               console.log("updating activity user online")
-              activityList.push({ ...reciever, activity: 'online' });
+              activityList=[...activityList,({ ...reciever, activity: 'online' })];
             }
             io.to(reciever._id).emit('trigger', {
               sender: triggerObject.sender,
@@ -90,7 +90,8 @@ io.on('connection', function (socket) {
             // User is offline
             if (triggerObject.action == "ping") {
               console.log("updating activity user offline")
-              activityList.push({ ...reciever, activity: 'offline' });
+              activityList=[...activityList,({ ...reciever, activity: 'offline' })];
+              //activityList.push({ ...reciever, activity: 'offline' });
             }
             offlineUsers.push(reciever._id); // Collect offline users
           }
