@@ -39,20 +39,20 @@ io.use((socket, next) => {
 });
 // Socket.IO event handlers
 io.on('connection', function (socket) {
-  console.log("new user connected");
-  socket.on('connected', () => {
+   const userId = socket.handshake.query.userId;
+  socket.join(userId);
+  // socket.on('connected', () => {
 
-  })
-
-  socket.on('disconnected', ({ personalroomid, friends }) => {
-    friends.forEach(element => {
-      socket.broadcast.to(element[0]).emit('disconnected', { user: personalroomid, status: 'offline' });
-    });
-  })
-  socket.on('join', (profile) => {
-    socket.join(profile._id);
-    console.log(profile.firstName + " joined");
-  })
+  // })
+  // socket.on('disconnected', ({ personalroomid, friends }) => {
+  //   friends.forEach(element => {
+  //     socket.broadcast.to(element[0]).emit('disconnected', { user: personalroomid, status: 'offline' });
+  //   });
+  // })
+  // socket.on('join', (profile) => {
+  //   socket.join(profile._id);
+  //   console.log(profile.firstName + " joined");
+  // })
   socket.on('trigger', async (triggerObject) => {
     try {
       console.log(triggerObject.action, triggerObject.sender.firstName);
