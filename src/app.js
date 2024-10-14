@@ -1,8 +1,8 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-const { createAdapter } = require('@socket.io/redis-adapter');
-const { createClient } = require('redis');
+import { createAdapter } from '@socket.io/redis-adapter';
+import { createClient } from 'redis';
 import { initialize } from "./dbConnection.js";
 import 'dotenv/config'
 import { getTokens, sendPushNotification } from "./sendNotification.js";
