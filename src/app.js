@@ -52,7 +52,7 @@ io.use((socket, next) => {
 io.on('connection', function (socket) {
   const userId = socket.handshake.query.userId;
   console.log("user connected joining",userId);
-  socket.join(userId);
+  userId?socket.join(userId):null;
   // socket.on('connected', () => {
 
   // })
