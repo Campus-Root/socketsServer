@@ -17,6 +17,7 @@
     "license": "ISC",
     "homepage": "",
     "dependencies": {
+        "@socket.io/redis-adapter": "^8.3.0",
         "axios": "^1.7.4",
         "cors": "^2.8.5",
         "dotenv": "^16.4.5",

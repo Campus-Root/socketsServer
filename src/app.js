@@ -1,11 +1,14 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
+const { createAdapter } = require('@socket.io/redis-adapter');
+const { createClient } = require('redis');
 import { initialize } from "./dbConnection.js";
 import 'dotenv/config'
 import { getTokens, sendPushNotification } from "./sendNotification.js";
 import morgan from "morgan";
 import helmet from "helmet";
+
 initialize();
 const app = express();
 app.use(morgan(':date[web] :method :url :status :res[content-length] - :response-time ms'));
@@ -27,20 +30,26 @@ app.get('/', (req, res) => res.send("socket server running"));
 
 
 const server = createServer(app);
+
+const activeUsers = new Set();
+const pubClient = createClient({ host: 'localhost', port: 6379 });
+const subClient = pubClient.duplicate();
+
 const io = new Server(server, {
   transports: ['websocket'],
   cors: {
     origin: "*",
     credentials: true,
   },
-}); // Initialize Socket.IO
+}); 
+io.adapter(createAdapter(pubClient, subClient));
 io.use((socket, next) => {
   next();
 });
-// Socket.IO event handlers
 io.on('connection', function (socket) {
-   const userId = socket.handshake.query.userId;
+  const userId = socket.handshake.query.userId;
   console.log("user connected joining",userId);
+  activeUsers.add(userId);
   socket.join(userId);
   // socket.on('connected', () => {
 
@@ -62,8 +71,7 @@ io.on('connection', function (socket) {
 
       // Check each receiver's online status
       triggerObject.recievers.forEach(reciever => {
-        var isOnline = io.sockets.adapter.rooms.get(reciever._id);
-        
+        var isOnline =activeUsers.has(reciever._id);// io.sockets.adapter.rooms.get(reciever._id);
         if (isOnline) {
           // User is online
           if (triggerObject.action === "ping") {
