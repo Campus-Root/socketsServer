@@ -31,7 +31,6 @@ app.get('/', (req, res) => res.send("socket server running"));
 
 const server = createServer(app);
 
-const activeUsers = new Set();
 const pubClient = createClient({ host: 'localhost', port: 6379 });
 const subClient = pubClient.duplicate();
 await Promise.all([
@@ -53,7 +52,6 @@ io.use((socket, next) => {
 io.on('connection', function (socket) {
   const userId = socket.handshake.query.userId;
   console.log("user connected joining",userId);
-  activeUsers.add(userId);
   socket.join(userId);
   // socket.on('connected', () => {
 
@@ -71,8 +69,6 @@ io.on('connection', function (socket) {
       //console.log("all rooms",io.sockets.adapter.rooms);
       var activityList = [];
       let offlineUsers = [];
-      let onlineUsers = [];
-
       // Check each receiver's online status
       triggerObject.recievers.forEach(reciever => {
         io.in(reciever._id).fetchSockets().then((recieverConnections)=>{
@@ -82,7 +78,12 @@ io.on('connection', function (socket) {
             if (triggerObject.action === "ping") {
               activityList.push({ ...reciever, activity: 'online' });
             }
-            onlineUsers.push(reciever._id); // Collect online users
+            io.to(reciever._id).emit('trigger', {
+              sender: triggerObject.sender,
+              action: triggerObject.action,
+              data: triggerObject.data
+            })
+            //onlineUsers.push(reciever._id); // Collect online users
           } else {
             // User is offline
             if (triggerObject.action === "ping") {
@@ -94,13 +95,13 @@ io.on('connection', function (socket) {
       });
 
       // Emit to all online users in their respective rooms
-      if (onlineUsers.length > 0) {
-        io.to(onlineUsers).emit('trigger', {
-          sender: triggerObject.sender,
-          action: triggerObject.action,
-          data: triggerObject.data
-        });
-      }
+      // if (onlineUsers.length > 0) {
+      //   io.to(onlineUsers).emit('trigger', {
+      //     sender: triggerObject.sender,
+      //     action: triggerObject.action,
+      //     data: triggerObject.data
+      //   });
+      // }
 
       // Handle offline users
       if (offlineUsers.length > 0) {
