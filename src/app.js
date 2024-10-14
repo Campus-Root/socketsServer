@@ -31,7 +31,7 @@ app.get('/', (req, res) => res.send("socket server running"));
 
 const server = createServer(app);
 
-const pubClient = createClient({ host: 'localhost', port: 6379 });
+const pubClient = createClient({ host: 'localhost', port: 6379 ,password:process.env.REDIS_PASSWORD});
 const subClient = pubClient.duplicate();
 await Promise.all([
   pubClient.connect(),
