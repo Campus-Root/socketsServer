@@ -56,29 +56,42 @@ io.on('connection', function (socket) {
   socket.on('trigger', async (triggerObject) => {
     try {
       console.log(triggerObject.action, triggerObject.sender.firstName);
-      console.log("all rooms",io.sockets.adapter.rooms);
       var activityList = [];
       let offlineUsers = [];
-      // console.log(triggerObject);
+      let onlineUsers = [];
+
+      // Check each receiver's online status
       triggerObject.recievers.forEach(reciever => {
-        var online = io.sockets.adapter.rooms.get(reciever._id);
-        console.log("reciever", reciever._id, reciever.firstName, online ? "online" : "offline");
-        if (online) {
-          if (triggerObject.action == "ping") {
+        var isOnline = io.sockets.adapter.rooms.get(reciever._id);
+        
+        if (isOnline) {
+          // User is online
+          if (triggerObject.action === "ping") {
             activityList.push({ ...reciever, activity: 'online' });
           }
-          socket.broadcast.to(reciever._id).emit('trigger', { sender: triggerObject.sender, action: triggerObject.action, data: triggerObject.data });
-        }
-        else {
-          if (triggerObject.action == "ping") {
+          onlineUsers.push(reciever._id); // Collect online users
+        } else {
+          // User is offline
+          if (triggerObject.action === "ping") {
             activityList.push({ ...reciever, activity: 'offline' });
-            offlineUsers.push(reciever._id);
           }
+          offlineUsers.push(reciever._id); // Collect offline users
         }
       });
+
+      // Emit to all online users in their respective rooms
+      if (onlineUsers.length > 0) {
+        io.to(onlineUsers).emit('trigger', {
+          sender: triggerObject.sender,
+          action: triggerObject.action,
+          data: triggerObject.data
+        });
+      }
+
+      // Handle offline users
       if (offlineUsers.length > 0) {
         console.log("offlineUsers:" + offlineUsers.length);
-        let Tokens = await getTokens(offlineUsers)
+        let Tokens = await getTokens(offlineUsers);
         console.log(Tokens);
         const message = {
           notification: {
@@ -92,16 +105,66 @@ io.on('connection', function (socket) {
           if (await sendPushNotification(message)) console.log("push notifications sent");
         }
       }
-      if (triggerObject.action == "ping") {
+
+      // Emit activity list back to the triggering user
+      if (triggerObject.action === "ping") {
         socket.emit('trigger', { sender: null, action: "activityList", data: activityList });
       }
+      
     } catch (error) {
       console.log(error);
-
     }
-
   });
 });
+//   socket.on('trigger', async (triggerObject) => {
+//     try {
+//       console.log(triggerObject.action, triggerObject.sender.firstName);
+//       console.log("all rooms",io.sockets.adapter.rooms);
+//       var activityList = [];
+//       let offlineUsers = [];
+//       // console.log(triggerObject);
+//       triggerObject.recievers.forEach(reciever => {
+//         var online = io.sockets.adapter.rooms.get(reciever._id);
+//         console.log("reciever", reciever._id, reciever.firstName, online ? "online" : "offline");
+//         if (online) {
+//           if (triggerObject.action == "ping") {
+//             activityList.push({ ...reciever, activity: 'online' });
+//           }
+//           socket.broadcast.to(reciever._id).emit('trigger', { sender: triggerObject.sender, action: triggerObject.action, data: triggerObject.data });
+//         }
+//         else {
+//           if (triggerObject.action == "ping") {
+//             activityList.push({ ...reciever, activity: 'offline' });
+//             offlineUsers.push(reciever._id);
+//           }
+//         }
+//       });
+//       if (offlineUsers.length > 0) {
+//         console.log("offlineUsers:" + offlineUsers.length);
+//         let Tokens = await getTokens(offlineUsers)
+//         console.log(Tokens);
+//         const message = {
+//           notification: {
+//             title: 'Test Notification',
+//             body: 'This is a test notification from your Express server!',
+//             data: { someData: "ustad hotel" }
+//           },
+//           tokens: Tokens
+//         };
+//         if (Tokens.length > 0) {
+//           if (await sendPushNotification(message)) console.log("push notifications sent");
+//         }
+//       }
+//       if (triggerObject.action == "ping") {
+//         socket.emit('trigger', { sender: null, action: "activityList", data: activityList });
+//       }
+//     } catch (error) {
+//       console.log(error);
+
+//     }
+
+//   });
+// });
 
 
 const port = process.env.PORT
