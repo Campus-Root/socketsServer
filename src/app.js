@@ -89,23 +89,14 @@ io.on('connection', function (socket) {
           } else {
             // User is offline
             if (triggerObject.action == "ping") {
-              console.log("updating activity user offline")
               activityList=[...activityList,({ ...reciever, activity: 'offline' })];
+              console.log("updating activity user offline",activityList)
               //activityList.push({ ...reciever, activity: 'offline' });
             }
             offlineUsers.push(reciever._id); // Collect offline users
           }
         })
       });
-
-      // Emit to all online users in their respective rooms
-      // if (onlineUsers.length > 0) {
-      //   io.to(onlineUsers).emit('trigger', {
-      //     sender: triggerObject.sender,
-      //     action: triggerObject.action,
-      //     data: triggerObject.data
-      //   });
-      // }
 
       // Handle offline users
       if (offlineUsers.length > 0) {
