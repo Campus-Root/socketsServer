@@ -45,11 +45,9 @@ io.on('connection', function (socket) {
   // socket.on('connected', () => {
 
   // })
-  // socket.on('disconnected', ({ personalroomid, friends }) => {
-  //   friends.forEach(element => {
-  //     socket.broadcast.to(element[0]).emit('disconnected', { user: personalroomid, status: 'offline' });
-  //   });
-  // })
+ socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
   // socket.on('join', (profile) => {
   //   socket.join(profile._id);
   //   console.log(profile.firstName + " joined");
