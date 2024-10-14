@@ -40,6 +40,7 @@ io.use((socket, next) => {
 // Socket.IO event handlers
 io.on('connection', function (socket) {
    const userId = socket.handshake.query.userId;
+  console.log("user connected joining",userId);
   socket.join(userId);
   // socket.on('connected', () => {
 
