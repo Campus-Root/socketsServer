@@ -70,17 +70,16 @@ io.on('connection', function (socket) {
       var activityList = [];
       let offlineUsers = [];
       // Check each receiver's online status
-      triggerObject.recievers.forEach(reciever => {
-        io.in(reciever._id).fetchSockets().then((recieverConnections)=>{
-          //console.log("connections of "+reciever.firstName+" ",recieverConnections.map((item)=>item.id));
-          var isOnline =recieverConnections.length!=0
+      for(var i=0;i<triggerObject.recievers.length;i++){
+        let recieverConnections=await io.in(triggerObject.recievers[i]._id).fetchSockets();
+        var isOnline =recieverConnections.length!=0
           if (isOnline) {
             // User is online
             if (triggerObject.action == "ping") {
-              console.log("updating activity user online")
-              activityList=[...activityList,({ ...reciever, activity: 'online' })];
+              //console.log("updating activity user online")
+              activityList=[...activityList,({ ...triggerObject.recievers[i], activity: 'online' })];
             }
-            io.to(reciever._id).emit('trigger', {
+            io.to(triggerObject.recievers[i]._id).emit('trigger', {
               sender: triggerObject.sender,
               action: triggerObject.action,
               data: triggerObject.data
@@ -89,14 +88,40 @@ io.on('connection', function (socket) {
           } else {
             // User is offline
             if (triggerObject.action == "ping") {
-              activityList=[...activityList,({ ...reciever, activity: 'offline' })];
-              console.log("updating activity user offline",activityList)
+              activityList=[...activityList,({ ...triggerObject.recievers[i], activity: 'offline' })];
+              //console.log("updating activity user offline",activityList)
               //activityList.push({ ...reciever, activity: 'offline' });
             }
-            offlineUsers.push(reciever._id); // Collect offline users
+            offlineUsers.push(triggerObject.recievers[i]._id); // Collect offline users
           }
-        })
-      });
+      }
+      // triggerObject.recievers.forEach(reciever => {
+      //   io.in(reciever._id).fetchSockets().then((recieverConnections)=>{
+      //     //console.log("connections of "+reciever.firstName+" ",recieverConnections.map((item)=>item.id));
+      //     var isOnline =recieverConnections.length!=0
+      //     if (isOnline) {
+      //       // User is online
+      //       if (triggerObject.action == "ping") {
+      //         console.log("updating activity user online")
+      //         activityList=[...activityList,({ ...reciever, activity: 'online' })];
+      //       }
+      //       io.to(reciever._id).emit('trigger', {
+      //         sender: triggerObject.sender,
+      //         action: triggerObject.action,
+      //         data: triggerObject.data
+      //       })
+      //       //onlineUsers.push(reciever._id); // Collect online users
+      //     } else {
+      //       // User is offline
+      //       if (triggerObject.action == "ping") {
+      //         activityList=[...activityList,({ ...reciever, activity: 'offline' })];
+      //         console.log("updating activity user offline",activityList)
+      //         //activityList.push({ ...reciever, activity: 'offline' });
+      //       }
+      //       offlineUsers.push(reciever._id); // Collect offline users
+      //     }
+      //   })
+      // });
 
       // Handle offline users
       if (offlineUsers.length > 0) {
