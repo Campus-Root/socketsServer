@@ -31,7 +31,6 @@ app.get('/', (req, res) => res.send("socket server running"));
 
 const server = createServer(app);
 
-const activeUsers = new Set();
 const pubClient = createClient({ host: 'localhost', port: 6379 });
 const subClient = pubClient.duplicate();
 await Promise.all([
@@ -53,7 +52,6 @@ io.use((socket, next) => {
 io.on('connection', function (socket) {
   const userId = socket.handshake.query.userId;
   console.log("user connected joining",userId);
-  activeUsers.add(userId);
   socket.join(userId);
   // socket.on('connected', () => {
 
@@ -75,7 +73,7 @@ io.on('connection', function (socket) {
 
       // Check each receiver's online status
       triggerObject.recievers.forEach(reciever => {
-        var isOnline =activeUsers.has(reciever._id);// io.sockets.adapter.rooms.get(reciever._id);
+        var isOnline =(await io.in(reciever._id).fetchSockets()).length!=0;
         if (isOnline) {
           // User is online
           if (triggerObject.action === "ping") {
