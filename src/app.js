@@ -31,6 +31,7 @@ app.get('/', (req, res) => res.send("socket server running"));
 
 const server = createServer(app);
 
+const activeUsers = new Set();
 const pubClient = createClient({ host: 'localhost', port: 6379 });
 const subClient = pubClient.duplicate();
 await Promise.all([
@@ -52,6 +53,7 @@ io.use((socket, next) => {
 io.on('connection', function (socket) {
   const userId = socket.handshake.query.userId;
   console.log("user connected joining",userId);
+  activeUsers.add(userId);
   socket.join(userId);
   // socket.on('connected', () => {
 
@@ -73,20 +75,22 @@ io.on('connection', function (socket) {
 
       // Check each receiver's online status
       triggerObject.recievers.forEach(reciever => {
-        var isOnline =(await io.in(reciever._id).fetchSockets()).length!=0;
-        if (isOnline) {
-          // User is online
-          if (triggerObject.action === "ping") {
-            activityList.push({ ...reciever, activity: 'online' });
+        io.in(reciever._id).fetchSockets().then((recieverConnections)=>{
+          var isOnline =recieverConnections.length!=0
+          if (isOnline) {
+            // User is online
+            if (triggerObject.action === "ping") {
+              activityList.push({ ...reciever, activity: 'online' });
+            }
+            onlineUsers.push(reciever._id); // Collect online users
+          } else {
+            // User is offline
+            if (triggerObject.action === "ping") {
+              activityList.push({ ...reciever, activity: 'offline' });
+            }
+            offlineUsers.push(reciever._id); // Collect offline users
           }
-          onlineUsers.push(reciever._id); // Collect online users
-        } else {
-          // User is offline
-          if (triggerObject.action === "ping") {
-            activityList.push({ ...reciever, activity: 'offline' });
-          }
-          offlineUsers.push(reciever._id); // Collect offline users
-        }
+        })
       });
 
       // Emit to all online users in their respective rooms
