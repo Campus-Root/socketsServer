@@ -56,6 +56,7 @@ io.on('connection', function (socket) {
   socket.on('trigger', async (triggerObject) => {
     try {
       console.log(triggerObject.action, triggerObject.sender.firstName);
+      console.log("all rooms",io.sockets.adapter.rooms);
       var activityList = [];
       let offlineUsers = [];
       let onlineUsers = [];
