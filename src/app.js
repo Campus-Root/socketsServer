@@ -69,6 +69,7 @@ io.on('connection', function (socket) {
       //console.log("all rooms",io.sockets.adapter.rooms);
       var activityList = [];
       let offlineUsers = [];
+      let virtualBot=triggerObject.recievers.find((reciever)=>reciever.role=="Virtual_Assistant")
       // Check each receiver's online status
       for(var i=0;i<triggerObject.recievers.length;i++){
         let recieverConnections=await io.in(triggerObject.recievers[i]._id).fetchSockets();
@@ -79,11 +80,28 @@ io.on('connection', function (socket) {
               //console.log("updating activity user online")
               activityList=[...activityList,({ ...triggerObject.recievers[i], activity: 'online' })];
             }
-            io.to(triggerObject.recievers[i]._id).emit('trigger', {
-              sender: triggerObject.sender,
-              action: triggerObject.action,
-              data: triggerObject.data
-            })
+            //identify ai agent
+            if (virtualBot) {
+              //handle request
+              socket.emit('trigger', { 
+                sender:virtualBot,
+                action: "typing",
+                data:"start"
+              });
+                const response = await axios.post("https://campusroot.com/api/v1/communication/assistant-chat", {
+                  "content": triggerObject.data
+                })
+                socket.emit('trigger', { sender:virtualBot,action: "typing",data:"stop"});
+                socket.emit('trigger', { sender: virtualBot, action: "send", data: response.data.success?response.data.data.reply:"Something went wrong" });
+            }
+            else
+            {
+              io.to(triggerObject.recievers[i]._id).emit('trigger', {
+                sender: triggerObject.sender,
+                action: triggerObject.action,
+                data: triggerObject.data
+              })
+            }
             //onlineUsers.push(reciever._id); // Collect online users
           } else {
             // User is offline
@@ -145,7 +163,6 @@ io.on('connection', function (socket) {
       if (triggerObject.action === "ping") {
         socket.emit('trigger', { sender: null, action: "activityList", data: activityList });
       }
-      
     } catch (error) {
       console.log(error);
     }
