@@ -89,7 +89,9 @@ io.on('connection', function (socket) {
                 data:"start"
               });
                 const response = await axios.post("https://campusroot.com/api/v1/communication/assistant-chat", {
-                  "content": triggerObject.data
+                  "content": triggerObject.data.message.content,
+                  "chatId":triggerObject.data.chat._id
+
                 })
                 socket.emit('trigger', { sender:virtualBot,action: "typing",data:"stop"});
                 socket.emit('trigger', { sender: virtualBot, action: "send", data: response.data.success?response.data.data.reply:"Something went wrong" });
