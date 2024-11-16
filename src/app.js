@@ -32,7 +32,7 @@ app.get('/', (req, res) => res.send("socket server running"));
 
 const server = createServer(app);
 
-const pubClient = createClient({ host: 'localhost', port: 6379 ,password:process.env.REDIS_PASSWORD});
+const pubClient = createClient({ host: 'localhost', port: 6379, password: process.env.REDIS_PASSWORD });
 const subClient = pubClient.duplicate();
 await Promise.all([
   pubClient.connect(),
@@ -45,19 +45,19 @@ const io = new Server(server, {
     origin: "*",
     credentials: true,
   },
-}); 
+});
 io.adapter(createAdapter(pubClient, subClient));
 io.use((socket, next) => {
   next();
 });
 io.on('connection', function (socket) {
   const userId = socket.handshake.query.userId;
-  console.log("user connected joining",userId);
-  userId?socket.join(userId):null;
+  console.log("user connected joining", userId);
+  userId ? socket.join(userId) : null;
   // socket.on('connected', () => {
 
   // })
- socket.on('disconnect', () => {
+  socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
   // socket.on('join', (profile) => {
@@ -70,51 +70,53 @@ io.on('connection', function (socket) {
       //console.log("all rooms",io.sockets.adapter.rooms);
       var activityList = [];
       let offlineUsers = [];
-      let virtualBot=triggerObject.recievers.find((reciever)=>reciever.role=="Virtual_Assistant")
+      let virtualBot = triggerObject.recievers.find((reciever) => reciever.role == "Virtual_Assistant")
       // Check each receiver's online status
-      for(var i=0;i<triggerObject.recievers.length;i++){
-        let recieverConnections=await io.in(triggerObject.recievers[i]._id).fetchSockets();
-        var isOnline =virtualBot?true:recieverConnections.length!=0
-          if (isOnline) {
-            // User is online
-            if (triggerObject.action == "ping") {
-              //console.log("updating activity user online")
-              activityList=[...activityList,({ ...triggerObject.recievers[i], activity: 'online' })];
-            }
-            //identify ai agent
-            if (virtualBot) {
-              //handle request
-              socket.emit('trigger', { 
-                sender:virtualBot,
-                action: "typing",
-                data:"start"
-              });
-                const response = await axios.post("https://campusroot.com/api/v1/communication/assistant-chat", {
-                  "content": triggerObject.data.message.content,
-                  "chatId":triggerObject.data.chat._id
-
-                })
-                socket.emit('trigger', { sender:virtualBot,action: "typing",data:"stop"});
-                socket.emit('trigger', { sender: virtualBot, action: "send", data: response.data.data });
-            }
-            else
-            {
-              io.to(triggerObject.recievers[i]._id).emit('trigger', {
-                sender: triggerObject.sender,
-                action: triggerObject.action,
-                data: triggerObject.data
-              })
-            }
-            //onlineUsers.push(reciever._id); // Collect online users
-          } else {
-            // User is offline
-            if (triggerObject.action == "ping") {
-              activityList=[...activityList,({ ...triggerObject.recievers[i], activity: 'offline' })];
-              //console.log("updating activity user offline",activityList)
-              //activityList.push({ ...reciever, activity: 'offline' });
-            }
-            offlineUsers.push(triggerObject.recievers[i]._id); // Collect offline users
+      for (var i = 0; i < triggerObject.recievers.length; i++) {
+        let recieverConnections = await io.in(triggerObject.recievers[i]._id).fetchSockets();
+        var isOnline = virtualBot ? true : recieverConnections.length != 0
+        if (isOnline) {
+          // User is online
+          if (triggerObject.action == "ping") {
+            //console.log("updating activity user online")
+            activityList = [...activityList, ({ ...triggerObject.recievers[i], activity: 'online' })];
           }
+          //identify ai agent
+          if (virtualBot) {
+            if (triggerObject.action == "send") {
+              //handle request
+              socket.emit('trigger', {
+                sender: virtualBot,
+                action: "typing",
+                data: "start"
+              });
+              const response = await axios.post("https://campusroot.com/api/v1/communication/assistant-chat", {
+                "content": triggerObject.data.message.content,
+                "chatId": triggerObject.data.chat._id
+
+              })
+              socket.emit('trigger', { sender: virtualBot, action: "typing", data: "stop" });
+              socket.emit('trigger', { sender: virtualBot, action: "send", data: response.data.data });
+            }
+          }
+
+          else {
+            io.to(triggerObject.recievers[i]._id).emit('trigger', {
+              sender: triggerObject.sender,
+              action: triggerObject.action,
+              data: triggerObject.data
+            })
+          }
+          //onlineUsers.push(reciever._id); // Collect online users
+        } else {
+          // User is offline
+          if (triggerObject.action == "ping") {
+            activityList = [...activityList, ({ ...triggerObject.recievers[i], activity: 'offline' })];
+            //console.log("updating activity user offline",activityList)
+            //activityList.push({ ...reciever, activity: 'offline' });
+          }
+          offlineUsers.push(triggerObject.recievers[i]._id); // Collect offline users
+        }
       }
       // triggerObject.recievers.forEach(reciever => {
       //   io.in(reciever._id).fetchSockets().then((recieverConnections)=>{
