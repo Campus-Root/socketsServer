@@ -8,6 +8,7 @@ import 'dotenv/config'
 import { getTokens, sendPushNotification } from "./sendNotification.js";
 import morgan from "morgan";
 import helmet from "helmet";
+import axios from "axios";
 
 initialize();
 const app = express();
@@ -94,7 +95,7 @@ io.on('connection', function (socket) {
 
                 })
                 socket.emit('trigger', { sender:virtualBot,action: "typing",data:"stop"});
-                socket.emit('trigger', { sender: virtualBot, action: "send", data: response.data.success?response.data.data.reply:"Something went wrong" });
+                socket.emit('trigger', { sender: virtualBot, action: "send", data: response.data.data });
             }
             else
             {
