@@ -70,7 +70,7 @@ io.on('connection', function (socket) {
       //console.log("all rooms",io.sockets.adapter.rooms);
       var activityList = [];
       let offlineUsers = [];
-      let virtualBot = triggerObject.recievers.find((reciever) => reciever.role == "Virtual_Assistant")
+      //let virtualBot = triggerObject.recievers.find((reciever) => reciever.role == "Virtual_Assistant")
       // Check each receiver's online status
       for (var i = 0; i < triggerObject.recievers.length; i++) {
         let recieverConnections = await io.in(triggerObject.recievers[i]._id).fetchSockets();
@@ -86,7 +86,7 @@ io.on('connection', function (socket) {
             if (triggerObject.action == "send") {
               //handle request
               socket.emit('trigger', {
-                sender: virtualBot,
+                sender: triggerObject.recievers[i],
                 action: "typing",
                 data: "start"
               });
