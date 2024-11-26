@@ -74,7 +74,7 @@ io.on('connection', function (socket) {
       // Check each receiver's online status
       for (var i = 0; i < triggerObject.recievers.length; i++) {
         let recieverConnections = await io.in(triggerObject.recievers[i]._id).fetchSockets();
-        var isOnline = virtualBot ? true : recieverConnections.length != 0
+        var isOnline = triggerObject.recievers[i].role == "Virtual_Assistant" ? true : recieverConnections.length != 0
         if (isOnline) {
           // User is online
           if (triggerObject.action == "ping") {
@@ -82,7 +82,7 @@ io.on('connection', function (socket) {
             activityList = [...activityList, ({ ...triggerObject.recievers[i], activity: 'online' })];
           }
           //identify ai agent
-          if (virtualBot) {
+          if (triggerObject.recievers[i].role == "Virtual_Assistant") {
             if (triggerObject.action == "send") {
               //handle request
               socket.emit('trigger', {
@@ -95,11 +95,10 @@ io.on('connection', function (socket) {
                 "chatId": triggerObject.data.chat._id
 
               })
-              socket.emit('trigger', { sender: virtualBot, action: "typing", data: "stop" });
-              socket.emit('trigger', { sender: virtualBot, action: "send", data: response.data.data });
+              socket.emit('trigger', { sender: triggerObject.recievers[i], action: "typing", data: "stop" });
+              socket.emit('trigger', { sender: triggerObject.recievers[i], action: "send", data: response.data.data });
             }
           }
-
           else {
             io.to(triggerObject.recievers[i]._id).emit('trigger', {
               sender: triggerObject.sender,
