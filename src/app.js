@@ -143,7 +143,7 @@ io.on('connection', function (socket) {
         socket.emit('trigger', { sender: null, action: "activityList", data: activityList });
       }
     } catch (error) {
-      console.log(error);
+      console.log(error)
     }
   });
 });
