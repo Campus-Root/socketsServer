@@ -76,6 +76,7 @@ io.on('connection', function (socket) {
         let recieverConnections = await io.in(triggerObject.recievers[i]._id).fetchSockets();
         var isOnline = triggerObject.recievers[i].role == "Virtual_Assistant" ? true : recieverConnections.length != 0
         if (isOnline) {
+          console.log(triggerObject.recievers[i].firstName," is online");
           // User is online
           if (triggerObject.action == "ping") {
             //console.log("updating activity user online")
@@ -109,6 +110,7 @@ io.on('connection', function (socket) {
           //onlineUsers.push(reciever._id); // Collect online users
         } else {
           // User is offline
+          console.log(triggerObject.recievers[i].firstName," is offline");
           if (triggerObject.action == "ping") {
             activityList = [...activityList, ({ ...triggerObject.recievers[i], activity: 'offline' })];
             //console.log("updating activity user offline",activityList)
