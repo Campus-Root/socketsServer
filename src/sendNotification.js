@@ -11,6 +11,7 @@ export const getTokens = async (ids) => {
             const values = await Promise.all(keys.map(key => redisClient.get(key)));
             tokens.push(...values);
         }
+         console.log("Tokens ",tokens);
         return tokens;
     } catch (err) {
         console.error(err);
