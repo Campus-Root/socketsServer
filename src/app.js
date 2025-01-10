@@ -74,7 +74,7 @@ io.on('connection', function (socket) {
       // Check each receiver's online status
       for (var i = 0; i < triggerObject.recievers.length; i++) {
         let recieverConnections = await io.in(triggerObject.recievers[i]._id).fetchSockets();
-        console.log("recievers",recieverConnections);
+        console.log("recievers",recieverConnections.length);
         var isOnline = triggerObject.recievers[i].role == "Virtual_Assistant" ? true : recieverConnections.length != 0
         if (isOnline) {
           console.log(triggerObject.recievers[i].firstName," is online");
@@ -120,39 +120,11 @@ io.on('connection', function (socket) {
           offlineUsers.push(triggerObject.recievers[i]._id); // Collect offline users
         }
       }
-      // triggerObject.recievers.forEach(reciever => {
-      //   io.in(reciever._id).fetchSockets().then((recieverConnections)=>{
-      //     //console.log("connections of "+reciever.firstName+" ",recieverConnections.map((item)=>item.id));
-      //     var isOnline =recieverConnections.length!=0
-      //     if (isOnline) {
-      //       // User is online
-      //       if (triggerObject.action == "ping") {
-      //         console.log("updating activity user online")
-      //         activityList=[...activityList,({ ...reciever, activity: 'online' })];
-      //       }
-      //       io.to(reciever._id).emit('trigger', {
-      //         sender: triggerObject.sender,
-      //         action: triggerObject.action,
-      //         data: triggerObject.data
-      //       })
-      //       //onlineUsers.push(reciever._id); // Collect online users
-      //     } else {
-      //       // User is offline
-      //       if (triggerObject.action == "ping") {
-      //         activityList=[...activityList,({ ...reciever, activity: 'offline' })];
-      //         console.log("updating activity user offline",activityList)
-      //         //activityList.push({ ...reciever, activity: 'offline' });
-      //       }
-      //       offlineUsers.push(reciever._id); // Collect offline users
-      //     }
-      //   })
-      // });
 
       // Handle offline users
       if (offlineUsers.length > 0) {
         console.log("offlineUsers:" + offlineUsers.length);
         let Tokens = await getTokens(offlineUsers);
-        console.log(Tokens);
         const message = {
           notification: {
             title: 'Test Notification',
