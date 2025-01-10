@@ -32,6 +32,7 @@ export const sendPushNotification = async ({ tokens, notification }) => {
             body: notification.body,
             data: notification.data
         }, { headers });
+        console.log("Expo response ",JSON.stringify(response.data,null,2));
         return true;
     } catch (error) {
         console.error('Error:', error.response ? error.response.data : error.message);
