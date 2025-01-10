@@ -133,7 +133,7 @@ io.on('connection', function (socket) {
           },
           tokens: Tokens
         };
-        if (Tokens.length > 0) {
+        if (Tokens.length > 0 && triggerObject.action === "send") {
           if (await sendPushNotification(message)) console.log("push notifications sent");
         }
       }
