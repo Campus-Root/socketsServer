@@ -122,7 +122,7 @@ io.on('connection', function (socket) {
       }
 
       // Handle offline users
-      if (offlineUsers.length > 0) {
+      if (offlineUsers.length > 0 && triggerObject.action === "send") {
         console.log("offlineUsers:" + offlineUsers.length);
         let Tokens = await getTokens(offlineUsers);
         const message = {
@@ -133,7 +133,7 @@ io.on('connection', function (socket) {
           },
           tokens: Tokens
         };
-        if (Tokens.length > 0 && triggerObject.action === "send") {
+        if (Tokens.length > 0) {
           if (await sendPushNotification(message)) console.log("push notifications sent");
         }
       }
