@@ -74,6 +74,7 @@ io.on('connection', function (socket) {
       // Check each receiver's online status
       for (var i = 0; i < triggerObject.recievers.length; i++) {
         let recieverConnections = await io.in(triggerObject.recievers[i]._id).fetchSockets();
+        console.log("recievers",recieverConnections);
         var isOnline = triggerObject.recievers[i].role == "Virtual_Assistant" ? true : recieverConnections.length != 0
         if (isOnline) {
           console.log(triggerObject.recievers[i].firstName," is online");
