@@ -96,7 +96,7 @@ io.on('connection', function (socket) {
       if (triggerObject.action === "ping") {
         socket.emit('trigger', { sender: null, action: "activityList", data: activityList });
       }
-      console.log('Trigger Info',JSON.stringify({...triggerObject,activityList:activityList},null,2));
+      console.log('Trigger Info',JSON.stringify({action:triggerObject.action,sender:triggerObject.sender,data:triggerObject.data,activityList:activityList.map((user)=>({id:user._id,name:user.firstName+" "+user.lastName,activity:user.activity}))},null,2));
     } catch (error) {
       console.log(error);
     }
