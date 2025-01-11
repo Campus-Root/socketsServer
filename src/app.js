@@ -61,8 +61,6 @@ io.on('connection', function (socket) {
 
   socket.on('trigger', async (triggerObject) => {
     try {
-      console.log(triggerObject.action, triggerObject.sender.firstName);
-      //console.log("all rooms",io.sockets.adapter.rooms);
       var activityList = [];
       let offlineUsers = [];
       
@@ -70,7 +68,6 @@ io.on('connection', function (socket) {
       for (var i = 0; i < triggerObject.recievers.length; i++) {
         let recieverConnections = await io.in(triggerObject.recievers[i]._id).fetchSockets();
         var isOnline = triggerObject.recievers[i].role == "Virtual_Assistant" ? true : recieverConnections.length != 0
-        console.log("reciever ",triggerObject.recievers[i].firstName,recieverConnections.length);
         // User is online
         if (isOnline) {
           activityList = [...activityList, ({ ...triggerObject.recievers[i], activity: 'online' })];
@@ -99,6 +96,7 @@ io.on('connection', function (socket) {
       if (triggerObject.action === "ping") {
         socket.emit('trigger', { sender: null, action: "activityList", data: activityList });
       }
+      console.log('Trigger Info',JSON.stringify({...triggerObject,activityList:activityList}));
     } catch (error) {
       console.log(error);
     }
