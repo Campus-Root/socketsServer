@@ -105,13 +105,13 @@ io.on('connection', function (socket) {
   });
 });
 
-const handleOfflineUsers=async (offlineUsers,message)=>{
+const handleOfflineUsers=async (offlineUsers,data)=>{
   let Tokens = await getTokens(offlineUsers);
   const message = {
     notification: {
       title: 'Test Notification',
       body: 'This is a test notification from your Express server!',
-      data: { someData: message }
+      data: { someData: data }
     },
     tokens: Tokens
   };
