@@ -54,91 +54,48 @@ io.on('connection', function (socket) {
   const userId = socket.handshake.query.userId;
   console.log("user connected joining", userId);
   userId ? socket.join(userId) : null;
-  // socket.on('connected', () => {
-
-  // })
+  
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
-  // socket.on('join', (profile) => {
-  //   socket.join(profile._id);
-  //   console.log(profile.firstName + " joined");
-  // })
+
   socket.on('trigger', async (triggerObject) => {
     try {
       console.log(triggerObject.action, triggerObject.sender.firstName);
       //console.log("all rooms",io.sockets.adapter.rooms);
       var activityList = [];
       let offlineUsers = [];
-      //let virtualBot = triggerObject.recievers.find((reciever) => reciever.role == "Virtual_Assistant")
+      
       // Check each receiver's online status
       for (var i = 0; i < triggerObject.recievers.length; i++) {
         let recieverConnections = await io.in(triggerObject.recievers[i]._id).fetchSockets();
-        console.log("recievers",recieverConnections.length);
         var isOnline = triggerObject.recievers[i].role == "Virtual_Assistant" ? true : recieverConnections.length != 0
+        console.log("reciever ",triggerObject.recievers[i].firstName,recieverConnections.length);
+        // User is online
         if (isOnline) {
-          console.log(triggerObject.recievers[i].firstName," is online");
-          // User is online
-          if (triggerObject.action == "ping") {
-            //console.log("updating activity user online")
-            activityList = [...activityList, ({ ...triggerObject.recievers[i], activity: 'online' })];
+          activityList = [...activityList, ({ ...triggerObject.recievers[i], activity: 'online' })];
+          //AVA
+          if (triggerObject.recievers[i].role == "Virtual_Assistant" && triggerObject.action == "send") {
+            await queryAVA(socket,triggerObject.recievers[i],triggerObject.data)
           }
-          //identify ai agent
-          if (triggerObject.recievers[i].role == "Virtual_Assistant") {
-            if (triggerObject.action == "send") {
-              //handle request
-              socket.emit('trigger', {
-                sender: triggerObject.recievers[i],
-                action: "typing",
-                data: "start"
-              });
-              const response = await axios.post("https://campusroot.com/api/v1/communication/assistant-chat", {
-                "content": triggerObject.data.message.content,
-                "chatId": triggerObject.data.chat._id
-
-              })
-              socket.emit('trigger', { sender: triggerObject.recievers[i], action: "typing", data: "stop" });
-              socket.emit('trigger', { sender: triggerObject.recievers[i], action: "send", data: response.data.data });
-            }
-          }
+          //Not AVA
           else {
-            io.to(triggerObject.recievers[i]._id).emit('trigger', {
-              sender: triggerObject.sender,
-              action: triggerObject.action,
-              data: triggerObject.data
-            })
+            io.to(triggerObject.recievers[i]._id).emit('trigger', {sender: triggerObject.sender,action: triggerObject.action,data: triggerObject.data})
           }
-          //onlineUsers.push(reciever._id); // Collect online users
-        } else {
-          // User is offline
-          console.log(triggerObject.recievers[i].firstName," is offline");
-          if (triggerObject.action == "ping") {
-            activityList = [...activityList, ({ ...triggerObject.recievers[i], activity: 'offline' })];
-            //console.log("updating activity user offline",activityList)
-            //activityList.push({ ...reciever, activity: 'offline' });
-          }
+        }
+        // User is offline
+        else {
+          activityList = [...activityList, ({ ...triggerObject.recievers[i], activity: 'offline' })];
           offlineUsers.push(triggerObject.recievers[i]._id); // Collect offline users
         }
       }
 
       // Handle offline users
       if (offlineUsers.length > 0 && triggerObject.action === "send") {
-        console.log("offlineUsers:" + offlineUsers.length);
-        let Tokens = await getTokens(offlineUsers);
-        const message = {
-          notification: {
-            title: 'Test Notification',
-            body: 'This is a test notification from your Express server!',
-            data: { someData: "ustad hotel" }
-          },
-          tokens: Tokens
-        };
-        if (Tokens.length > 0) {
-          if (await sendPushNotification(message)) console.log("push notifications sent");
-        }
+          handleOfflineUsers(offlineUsers,triggerObject.data.message.content)
       }
 
-      // Emit activity list back to the triggering user
+      // Emit activity list back to the triggering user for ping action
       if (triggerObject.action === "ping") {
         socket.emit('trigger', { sender: null, action: "activityList", data: activityList });
       }
@@ -147,56 +104,31 @@ io.on('connection', function (socket) {
     }
   });
 });
-//   socket.on('trigger', async (triggerObject) => {
-//     try {
-//       console.log(triggerObject.action, triggerObject.sender.firstName);
-//       console.log("all rooms",io.sockets.adapter.rooms);
-//       var activityList = [];
-//       let offlineUsers = [];
-//       // console.log(triggerObject);
-//       triggerObject.recievers.forEach(reciever => {
-//         var online = io.sockets.adapter.rooms.get(reciever._id);
-//         console.log("reciever", reciever._id, reciever.firstName, online ? "online" : "offline");
-//         if (online) {
-//           if (triggerObject.action == "ping") {
-//             activityList.push({ ...reciever, activity: 'online' });
-//           }
-//           socket.broadcast.to(reciever._id).emit('trigger', { sender: triggerObject.sender, action: triggerObject.action, data: triggerObject.data });
-//         }
-//         else {
-//           if (triggerObject.action == "ping") {
-//             activityList.push({ ...reciever, activity: 'offline' });
-//             offlineUsers.push(reciever._id);
-//           }
-//         }
-//       });
-//       if (offlineUsers.length > 0) {
-//         console.log("offlineUsers:" + offlineUsers.length);
-//         let Tokens = await getTokens(offlineUsers)
-//         console.log(Tokens);
-//         const message = {
-//           notification: {
-//             title: 'Test Notification',
-//             body: 'This is a test notification from your Express server!',
-//             data: { someData: "ustad hotel" }
-//           },
-//           tokens: Tokens
-//         };
-//         if (Tokens.length > 0) {
-//           if (await sendPushNotification(message)) console.log("push notifications sent");
-//         }
-//       }
-//       if (triggerObject.action == "ping") {
-//         socket.emit('trigger', { sender: null, action: "activityList", data: activityList });
-//       }
-//     } catch (error) {
-//       console.log(error);
 
-//     }
+const handleOfflineUsers=(offlineUsers,message)=>{
+  let Tokens = await getTokens(offlineUsers);
+  const message = {
+    notification: {
+      title: 'Test Notification',
+      body: 'This is a test notification from your Express server!',
+      data: { someData: message }
+    },
+    tokens: Tokens
+  };
+  if (Tokens.length > 0) {
+    await sendPushNotification(message);
+  }
+}
 
-//   });
-// });
-
+const queryAVA=(socket,AVAInfo,data)=>{
+    socket.emit('trigger', {sender: AVAInfo,action: "typing",data: "start"});
+    const response = await axios.post("https://campusroot.com/api/v1/communication/assistant-chat", {
+      "content": data.message.content,
+      "chatId": data.chat._id
+    })
+    socket.emit('trigger', { sender: AVAInfo, action: "typing", data: "stop" });
+    socket.emit('trigger', { sender: AVAInfo, action: "send", data: response.data.data });
+}
 
 const port = process.env.PORT
 server.listen(port, () => console.log("Server Running on " + `${port}`));
