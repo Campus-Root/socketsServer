@@ -105,7 +105,7 @@ io.on('connection', function (socket) {
   });
 });
 
-const handleOfflineUsers=(offlineUsers,message)=>{
+const handleOfflineUsers=async (offlineUsers,message)=>{
   let Tokens = await getTokens(offlineUsers);
   const message = {
     notification: {
@@ -120,7 +120,7 @@ const handleOfflineUsers=(offlineUsers,message)=>{
   }
 }
 
-const queryAVA=(socket,AVAInfo,data)=>{
+const queryAVA=async (socket,AVAInfo,data)=>{
     socket.emit('trigger', {sender: AVAInfo,action: "typing",data: "start"});
     const response = await axios.post("https://campusroot.com/api/v1/communication/assistant-chat", {
       "content": data.message.content,
